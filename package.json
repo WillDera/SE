@@ -1,0 +1,10 @@
+{
+  "name": "SE",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Ezeoke Godswill <30760648+WillDera@users.noreply.github.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "hardhat": "^2.9.1"
+  }
+}
