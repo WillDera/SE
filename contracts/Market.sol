@@ -67,7 +67,11 @@ contract Market is ReentrancyGuard {
         );
 
         // transfer ownership of the token
-        IERC721(nftContract).transferFrom(msg.sender, address(this), tokenId);
+        IERC721(nftContract).safeTransferFrom(
+            msg.sender,
+            address(this),
+            tokenId
+        );
 
         // emit token creation event
         emit MarketItemCreated(
