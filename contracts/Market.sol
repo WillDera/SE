@@ -13,6 +13,10 @@ contract Market is ReentrancyGuard {
     address payable public owner;
     uint256 public listingPrice = 0.015 ether;
 
+    event End(address highestBidder, uint256 highestBid);
+    event Bid(address indexed sender, uint256 amount);
+    event Withdraw(address indexed bidder, uint256 amount);
+
     constructor() {
         owner = payable(msg.sender);
     }
@@ -25,6 +29,10 @@ contract Market is ReentrancyGuard {
         address payable owner; // buyer address
         uint256 price; // listing price of nft
         bool sold; // sale state of nft. true = sold / false = not sold
+        uint256 highestBid; // highest bid for nft
+        bool started; // auction start time
+        bool ended; // auction end time
+        uint256 endAt; // time auction ended
     }
 
     event MarketItemCreated(
@@ -34,10 +42,15 @@ contract Market is ReentrancyGuard {
         address seller,
         address owner,
         uint256 price,
-        bool sold
+        bool sold,
+        uint256 highestBid,
+        bool started,
+        bool ended,
+        uint256 endAt
     );
 
-    mapping(uint256 => MarketItem) private idToMarketItem;
+    mapping(uint256 => MarketItem) private idToMarketItem; // map id to a market item
+    mapping(address => uint256) public bids; // map address to amount bidded
 
     function getListingPrice() public view returns (uint256) {
         return listingPrice;
@@ -57,6 +70,15 @@ contract Market is ReentrancyGuard {
         _itemIds.increment();
         uint256 itemId = _itemIds.current();
 
+        // set listing price to initial highest bid
+        uint256 highestBid = price;
+
+        // start the auction
+        bool start = true;
+
+        // set auction end time
+        uint256 endAt = block.timestamp + 2 days;
+
         idToMarketItem[itemId] = MarketItem(
             itemId,
             nftContract,
@@ -64,10 +86,14 @@ contract Market is ReentrancyGuard {
             payable(msg.sender),
             payable(address(0)),
             price,
-            false
+            false,
+            highestBid,
+            start,
+            false,
+            endAt
         );
 
-        // transfer ownership of the token
+        // transfer ownership of the token to Market contract
         IERC721(nftContract).safeTransferFrom(
             msg.sender,
             address(this),
@@ -82,7 +108,11 @@ contract Market is ReentrancyGuard {
             msg.sender,
             address(0),
             price,
-            false
+            false,
+            highestBid,
+            start,
+            false,
+            endAt
         );
     }
 
@@ -179,4 +209,6 @@ contract Market is ReentrancyGuard {
         }
         return items;
     }
+
+    // TODO: Implement auction and bidding feature for NFTs
 }
