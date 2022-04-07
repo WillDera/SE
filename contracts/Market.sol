@@ -140,6 +140,9 @@ contract Market is ReentrancyGuard {
 
         idToMarketItem[itemId].highestBid = msg.value;
         idToMarketItem[itemId].highestBidder = msg.sender;
+
+        //TODO: update marketItem struct
+        //TODO: emit bid event
     }
 
     function endMarketAuction(address nftContract, uint256 itemId)
@@ -177,6 +180,9 @@ contract Market is ReentrancyGuard {
             // pay the contract/marketplace owner
             payable(owner).transfer(listingPrice);
         }
+
+        //TODO: update marketItem struct
+        //TODO: emit auction end event
     }
 
     // get all unsold nfts
@@ -244,6 +250,4 @@ contract Market is ReentrancyGuard {
         }
         return items;
     }
-
-    // TODO: Implement auction and bidding feature for NFTs
 }
