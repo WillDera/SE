@@ -30,10 +30,13 @@ contract Market is ReentrancyGuard {
         uint256 price; // listing price of nft
         bool sold; // sale state of nft. true = sold / false = not sold
         uint256 highestBid; // highest bid for nft
+        address highestBidder; // highest biddder for nft
         bool started; // auction start time
         bool ended; // auction end time
         uint256 endAt; // time auction ended
     }
+
+    MarketItem marketItem;
 
     event MarketItemCreated(
         uint256 indexed itemId,
@@ -44,6 +47,7 @@ contract Market is ReentrancyGuard {
         uint256 price,
         bool sold,
         uint256 highestBid,
+        address highestBidder,
         bool started,
         bool ended,
         uint256 endAt
@@ -73,6 +77,9 @@ contract Market is ReentrancyGuard {
         // set listing price to initial highest bid
         uint256 highestBid = price;
 
+        // set highest bidder to seller
+        address highestBidder = msg.sender;
+
         // start the auction
         bool start = true;
 
@@ -88,6 +95,7 @@ contract Market is ReentrancyGuard {
             price,
             false,
             highestBid,
+            highestBidder,
             start,
             false,
             endAt
@@ -110,38 +118,65 @@ contract Market is ReentrancyGuard {
             price,
             false,
             highestBid,
+            highestBidder,
             start,
             false,
             endAt
         );
     }
 
-    function createMarketSale(address nftContract, uint256 itemId)
-        public
-        payable
-        nonReentrant
-    {
-        uint256 price = idToMarketItem[itemId].price;
-        uint256 tokenId = idToMarketItem[itemId].tokenId;
+    function createMarketAuction(uint256 itemId) public payable nonReentrant {
+        require(idToMarketItem[itemId].started, "Not Started");
+        require(block.timestamp < idToMarketItem[itemId].endAt, "Ended!");
         require(
-            msg.value == price,
-            "Please submit the asking price in order to complete the purchase!"
+            msg.value > idToMarketItem[itemId].highestBid,
+            "Bid lower than highest bid"
         );
 
-        // transfer matic from the buyer to the seller
-        idToMarketItem[itemId].seller.transfer(msg.value);
+        if (idToMarketItem[itemId].highestBidder != address(0)) {
+            bids[idToMarketItem[itemId].highestBidder] += idToMarketItem[itemId]
+                .highestBid;
+        }
 
-        // transfer ownership of nft to buyer
-        IERC721(nftContract).transferFrom(address(this), msg.sender, tokenId);
+        idToMarketItem[itemId].highestBid = msg.value;
+        idToMarketItem[itemId].highestBidder = msg.sender;
+    }
 
-        // set owner of nft to buyer
-        // set sale state to true
-        // increment number of sold nfts
-        // pay the contract/marketplace owner
-        idToMarketItem[itemId].owner = payable(msg.sender);
-        idToMarketItem[itemId].sold = true;
-        _itemsSold.increment();
-        payable(owner).transfer(listingPrice);
+    function endMarketAuction(address nftContract, uint256 itemId)
+        public
+        nonReentrant
+    {
+        uint256 tokenId = idToMarketItem[itemId].tokenId;
+        address highestBidder = idToMarketItem[itemId].highestBidder;
+        uint256 highestBid = idToMarketItem[itemId].highestBid;
+
+        require(idToMarketItem[itemId].started, "Auction not started!");
+        require(
+            block.timestamp >= idToMarketItem[itemId].endAt,
+            "Auction still in progress"
+        );
+        require(!idToMarketItem[itemId].ended, "Auction already ended!");
+
+        if (idToMarketItem[itemId].highestBidder != address(0)) {
+            // transfer highest bid to seller at the end of the auction
+            idToMarketItem[itemId].seller.transfer(highestBid);
+
+            // transfer ownership of nft to the highest bidder at the end of the auction
+            IERC721(nftContract).transferFrom(
+                address(this),
+                highestBidder,
+                tokenId
+            );
+
+            // set owner of nft to highest bidder
+            idToMarketItem[itemId].owner = payable(highestBidder);
+            // set sale state to true
+            idToMarketItem[itemId].sold = true;
+            // increment number of sold nfts
+            _itemsSold.increment();
+            // pay the contract/marketplace owner
+            payable(owner).transfer(listingPrice);
+        }
     }
 
     // get all unsold nfts
