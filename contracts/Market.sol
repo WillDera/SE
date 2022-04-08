@@ -52,16 +52,17 @@ contract Market is ReentrancyGuard {
     );
 
     event NewBidPlaced(
-        uint256 indexed itemId,
         address indexed nftContract,
         uint256 indexed tokenId,
         address seller,
         address owner,
         bool sold,
         uint256 highestBid,
-        address highestBidder,
+        address indexed highestBidder,
         uint256 endTime
     );
+
+    event WithdrawBid(address indexed bidder, uint256 amount);
 
     mapping(uint256 => MarketItem) private idToMarketItem; // map id to a market item
     mapping(address => uint256) public bids; // map address to amount bidded
@@ -163,7 +164,6 @@ contract Market is ReentrancyGuard {
         //TODO: update marketItem struct
         //TODO: emit bid event
         emit NewBidPlaced(
-            itemId,
             nftContract,
             tokenId,
             msg.sender,
@@ -233,6 +233,31 @@ contract Market is ReentrancyGuard {
             false,
             endTime
         );
+    }
+
+    function withdrawBids(uint256 itemId) external payable {
+        uint256 highestBid = idToMarketItem[itemId].highestBid;
+        address sellerAddress = idToMarketItem[itemId].seller;
+
+        // get bid placed by user's wallet
+        uint256 placedBid = bids[msg.sender];
+
+        // make sure user isnt highest bidder
+        require(placedBid < highestBid, "You are the highest bidder!");
+
+        // make sure wallet address isn't the seller address
+        require(msg.sender != sellerAddress, "You are the seller!");
+
+        // set user's bids to 0
+        bids[msg.sender] = 0;
+
+        // send bid to user (withdrawal process)
+        (bool sent, bytes memory data) = payable(msg.sender).call{
+            value: placedBid
+        }("");
+        require(sent, "Could not withdraw");
+
+        emit WithdrawBid(msg.sender, placedBid);
     }
 
     // get all unsold nfts
