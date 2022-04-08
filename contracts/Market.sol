@@ -31,14 +31,12 @@ contract Market is ReentrancyGuard {
         bool sold; // sale state of nft. true = sold / false = not sold
         uint256 highestBid; // highest bid for nft
         address highestBidder; // highest biddder for nft
-        bool started; // auction start time
+        bool started; // auction started
         bool ended; // auction end time
-        uint256 endAt; // time auction ended
+        uint256 endTime; // time auction ended
     }
 
-    MarketItem marketItem;
-
-    event MarketItemCreated(
+    event MarketItemCreatedOrAuctionEnded(
         uint256 indexed itemId,
         address indexed nftContract,
         uint256 indexed tokenId,
@@ -50,7 +48,19 @@ contract Market is ReentrancyGuard {
         address highestBidder,
         bool started,
         bool ended,
-        uint256 endAt
+        uint256 endTime
+    );
+
+    event NewBidPlaced(
+        uint256 indexed itemId,
+        address indexed nftContract,
+        uint256 indexed tokenId,
+        address seller,
+        address owner,
+        bool sold,
+        uint256 highestBid,
+        address highestBidder,
+        uint256 endTime
     );
 
     mapping(uint256 => MarketItem) private idToMarketItem; // map id to a market item
@@ -81,10 +91,10 @@ contract Market is ReentrancyGuard {
         address highestBidder = msg.sender;
 
         // start the auction
-        bool start = true;
+        bool started = true;
 
         // set auction end time
-        uint256 endAt = block.timestamp + 2 days;
+        uint256 endTime = block.timestamp + 2 days;
 
         idToMarketItem[itemId] = MarketItem(
             itemId,
@@ -96,9 +106,9 @@ contract Market is ReentrancyGuard {
             false,
             highestBid,
             highestBidder,
-            start,
+            started,
             false,
-            endAt
+            endTime
         );
 
         // transfer ownership of the token to Market contract
@@ -109,7 +119,7 @@ contract Market is ReentrancyGuard {
         );
 
         // emit token creation event
-        emit MarketItemCreated(
+        emit MarketItemCreatedOrAuctionEnded(
             itemId,
             nftContract,
             tokenId,
@@ -119,18 +129,27 @@ contract Market is ReentrancyGuard {
             false,
             highestBid,
             highestBidder,
-            start,
+            started,
             false,
-            endAt
+            endTime
         );
     }
 
-    function createMarketAuction(uint256 itemId) public payable nonReentrant {
+    function placeBidOnAuction(address nftContract, uint256 itemId)
+        public
+        payable
+        nonReentrant
+    {
+        uint256 tokenId = idToMarketItem[itemId].tokenId;
+        uint256 highestBid = idToMarketItem[itemId].highestBid;
+        address highestBidder = idToMarketItem[itemId].highestBidder;
+        uint256 endTime = idToMarketItem[itemId].endTime;
+
         require(idToMarketItem[itemId].started, "Not Started");
-        require(block.timestamp < idToMarketItem[itemId].endAt, "Ended!");
+        require(block.timestamp < idToMarketItem[itemId].endTime, "Ended!");
         require(
             msg.value > idToMarketItem[itemId].highestBid,
-            "Bid lower than highest bid"
+            "Bid is lower than highest bid"
         );
 
         if (idToMarketItem[itemId].highestBidder != address(0)) {
@@ -138,11 +157,22 @@ contract Market is ReentrancyGuard {
                 .highestBid;
         }
 
-        idToMarketItem[itemId].highestBid = msg.value;
-        idToMarketItem[itemId].highestBidder = msg.sender;
+        highestBid = msg.value;
+        highestBidder = msg.sender;
 
         //TODO: update marketItem struct
         //TODO: emit bid event
+        emit NewBidPlaced(
+            itemId,
+            nftContract,
+            tokenId,
+            msg.sender,
+            address(0),
+            false,
+            highestBid,
+            highestBidder,
+            endTime
+        );
     }
 
     function endMarketAuction(address nftContract, uint256 itemId)
@@ -150,12 +180,15 @@ contract Market is ReentrancyGuard {
         nonReentrant
     {
         uint256 tokenId = idToMarketItem[itemId].tokenId;
+        uint256 price = idToMarketItem[itemId].price;
+        bool started = idToMarketItem[itemId].started;
+        uint256 endTime = idToMarketItem[itemId].endTime;
         address highestBidder = idToMarketItem[itemId].highestBidder;
         uint256 highestBid = idToMarketItem[itemId].highestBid;
 
         require(idToMarketItem[itemId].started, "Auction not started!");
         require(
-            block.timestamp >= idToMarketItem[itemId].endAt,
+            block.timestamp >= idToMarketItem[itemId].endTime,
             "Auction still in progress"
         );
         require(!idToMarketItem[itemId].ended, "Auction already ended!");
@@ -173,16 +206,33 @@ contract Market is ReentrancyGuard {
 
             // set owner of nft to highest bidder
             idToMarketItem[itemId].owner = payable(highestBidder);
+
             // set sale state to true
             idToMarketItem[itemId].sold = true;
+
             // increment number of sold nfts
             _itemsSold.increment();
-            // pay the contract/marketplace owner
-            payable(owner).transfer(listingPrice);
+
+            // pay the contract/marketplace owner <!-- Commented out for now ---->
+            // payable(owner).transfer(listingPrice);
         }
 
         //TODO: update marketItem struct
         //TODO: emit auction end event
+        emit MarketItemCreatedOrAuctionEnded(
+            itemId,
+            nftContract,
+            tokenId,
+            msg.sender,
+            address(0),
+            price,
+            false,
+            highestBid,
+            highestBidder,
+            started,
+            false,
+            endTime
+        );
     }
 
     // get all unsold nfts
