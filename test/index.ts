@@ -47,6 +47,32 @@ describe("NFTMarket", function (){
       let listedItems: any = await Market.fetchMarketItems()
       expect(await listedItems).to.have.lengthOf(2);
     })
+
+    it("Should deploy, list and accept bid for NFT", async function() {
+      // place bid
+      const [_, bidder1, bidder2] = await ethers.getSigners();
+      console.log({"Owner:": _.address, "bidder1:": bidder1.address})
+
+      const bidPrice: any = ethers.utils.parseUnits("500", "ether");
+
+      await Market.connect(bidder1).placeBidOnAuction(nftContractAddress, 1, bidPrice);
+
+      await Market.connect(bidder1).placeBidOnAuction(nftContractAddress, 2, bidPrice);
+
+      let data: any = await Market.fetchMarketItems();
+    })
+
+    it("Should place bid with a different address", async function(){
+      const [_, bidder1, bidder2] = await ethers.getSigners();
+      console.log({"Owner:": _.address, "bidder2:": bidder2.address})
+
+      const bidPrice: any = ethers.utils.parseUnits("550", "ether");
+
+      await Market.connect(bidder2).placeBidOnAuction(nftContractAddress, 2, bidPrice);
+
+      let data: any = await Market.fetchMarketItems();
+      console.log(data);
+    })
 });
 
 describe("Greeter", function () {

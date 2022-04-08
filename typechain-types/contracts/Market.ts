@@ -83,7 +83,7 @@ export interface MarketInterface extends utils.Interface {
     "getListingPrice()": FunctionFragment;
     "listingPrice()": FunctionFragment;
     "owner()": FunctionFragment;
-    "placeBidOnAuction(address,uint256)": FunctionFragment;
+    "placeBidOnAuction(address,uint256,uint256)": FunctionFragment;
     "withdrawBids(uint256)": FunctionFragment;
   };
 
@@ -134,7 +134,7 @@ export interface MarketInterface extends utils.Interface {
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "placeBidOnAuction",
-    values: [string, BigNumberish]
+    values: [string, BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "withdrawBids",
@@ -352,6 +352,7 @@ export interface Market extends BaseContract {
     placeBidOnAuction(
       nftContract: string,
       itemId: BigNumberish,
+      bid: BigNumberish,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -397,6 +398,7 @@ export interface Market extends BaseContract {
   placeBidOnAuction(
     nftContract: string,
     itemId: BigNumberish,
+    bid: BigNumberish,
     overrides?: PayableOverrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -442,6 +444,7 @@ export interface Market extends BaseContract {
     placeBidOnAuction(
       nftContract: string,
       itemId: BigNumberish,
+      bid: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -558,6 +561,7 @@ export interface Market extends BaseContract {
     placeBidOnAuction(
       nftContract: string,
       itemId: BigNumberish,
+      bid: BigNumberish,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -601,6 +605,7 @@ export interface Market extends BaseContract {
     placeBidOnAuction(
       nftContract: string,
       itemId: BigNumberish,
+      bid: BigNumberish,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

@@ -133,11 +133,11 @@ contract Market is ReentrancyGuard {
         );
     }
 
-    function placeBidOnAuction(address nftContract, uint256 itemId)
-        public
-        payable
-        nonReentrant
-    {
+    function placeBidOnAuction(
+        address nftContract,
+        uint256 itemId,
+        uint256 bid
+    ) public payable nonReentrant {
         uint256 tokenId = idToMarketItem[itemId].tokenId;
         uint256 highestBid = idToMarketItem[itemId].highestBid;
         address highestBidder = idToMarketItem[itemId].highestBidder;
@@ -146,7 +146,7 @@ contract Market is ReentrancyGuard {
         require(idToMarketItem[itemId].started, "Not Started");
         require(block.timestamp < idToMarketItem[itemId].endTime, "Ended!");
         require(
-            msg.value > idToMarketItem[itemId].highestBid,
+            bid > idToMarketItem[itemId].highestBid,
             "Bid is lower than highest bid"
         );
 
@@ -155,8 +155,8 @@ contract Market is ReentrancyGuard {
                 .highestBid;
         }
 
-        highestBid = msg.value;
-        highestBidder = msg.sender;
+        idToMarketItem[itemId].highestBid = bid;
+        idToMarketItem[itemId].highestBidder = msg.sender;
 
         //TODO: update marketItem struct
         //TODO: emit bid event
