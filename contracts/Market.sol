@@ -2,6 +2,7 @@
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
@@ -113,11 +114,7 @@ contract Market is ReentrancyGuard {
         );
 
         // transfer ownership of the token to Market contract
-        IERC721(nftContract).safeTransferFrom(
-            msg.sender,
-            address(this),
-            tokenId
-        );
+        IERC721(nftContract).transferFrom(msg.sender, address(this), tokenId);
 
         // emit token creation event
         emit MarketItemCreatedOrAuctionEnded(

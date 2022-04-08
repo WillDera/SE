@@ -30,7 +30,8 @@ export interface NFTInterface extends utils.Interface {
   functions: {
     "approve(address,uint256)": FunctionFragment;
     "balanceOf(address)": FunctionFragment;
-    "createTokens(string)": FunctionFragment;
+    "contractAddress()": FunctionFragment;
+    "createToken(string)": FunctionFragment;
     "getApproved(uint256)": FunctionFragment;
     "isApprovedForAll(address,address)": FunctionFragment;
     "name()": FunctionFragment;
@@ -48,7 +49,8 @@ export interface NFTInterface extends utils.Interface {
     nameOrSignatureOrTopic:
       | "approve"
       | "balanceOf"
-      | "createTokens"
+      | "contractAddress"
+      | "createToken"
       | "getApproved"
       | "isApprovedForAll"
       | "name"
@@ -68,9 +70,10 @@ export interface NFTInterface extends utils.Interface {
   ): string;
   encodeFunctionData(functionFragment: "balanceOf", values: [string]): string;
   encodeFunctionData(
-    functionFragment: "createTokens",
-    values: [string]
+    functionFragment: "contractAddress",
+    values?: undefined
   ): string;
+  encodeFunctionData(functionFragment: "createToken", values: [string]): string;
   encodeFunctionData(
     functionFragment: "getApproved",
     values: [BigNumberish]
@@ -113,7 +116,11 @@ export interface NFTInterface extends utils.Interface {
   decodeFunctionResult(functionFragment: "approve", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "balanceOf", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "createTokens",
+    functionFragment: "contractAddress",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "createToken",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -231,7 +238,9 @@ export interface NFT extends BaseContract {
 
     balanceOf(owner: string, overrides?: CallOverrides): Promise<[BigNumber]>;
 
-    createTokens(
+    contractAddress(overrides?: CallOverrides): Promise<[string]>;
+
+    createToken(
       tokenURI: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
@@ -303,7 +312,9 @@ export interface NFT extends BaseContract {
 
   balanceOf(owner: string, overrides?: CallOverrides): Promise<BigNumber>;
 
-  createTokens(
+  contractAddress(overrides?: CallOverrides): Promise<string>;
+
+  createToken(
     tokenURI: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
@@ -369,7 +380,9 @@ export interface NFT extends BaseContract {
 
     balanceOf(owner: string, overrides?: CallOverrides): Promise<BigNumber>;
 
-    createTokens(
+    contractAddress(overrides?: CallOverrides): Promise<string>;
+
+    createToken(
       tokenURI: string,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
@@ -471,7 +484,9 @@ export interface NFT extends BaseContract {
 
     balanceOf(owner: string, overrides?: CallOverrides): Promise<BigNumber>;
 
-    createTokens(
+    contractAddress(overrides?: CallOverrides): Promise<BigNumber>;
+
+    createToken(
       tokenURI: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
@@ -547,7 +562,9 @@ export interface NFT extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    createTokens(
+    contractAddress(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    createToken(
       tokenURI: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
