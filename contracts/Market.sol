@@ -72,6 +72,7 @@ contract Market is ReentrancyGuard {
         return listingPrice;
     }
 
+    //TODO: allow users to set end time
     function createMarketItem(
         address nftContract,
         uint256 tokenId,
@@ -155,11 +156,11 @@ contract Market is ReentrancyGuard {
                 .highestBid;
         }
 
+        //* Update marketItem struct
         idToMarketItem[itemId].highestBid = bid;
         idToMarketItem[itemId].highestBidder = msg.sender;
 
-        //TODO: update marketItem struct
-        //TODO: emit bid event
+        //* emit bid event
         emit NewBidPlaced(
             nftContract,
             tokenId,
@@ -201,11 +202,13 @@ contract Market is ReentrancyGuard {
                 tokenId
             );
 
+            //* Start: Update marketItem struct
             // set owner of nft to highest bidder
             idToMarketItem[itemId].owner = payable(highestBidder);
 
             // set sale state to true
             idToMarketItem[itemId].sold = true;
+            //* End: "Update marketItem struct
 
             // increment number of sold nfts
             _itemsSold.increment();
@@ -214,8 +217,7 @@ contract Market is ReentrancyGuard {
             // payable(owner).transfer(listingPrice);
         }
 
-        //TODO: update marketItem struct
-        //TODO: emit auction end event
+        //* emit auction end event
         emit MarketItemCreatedOrAuctionEnded(
             itemId,
             nftContract,
