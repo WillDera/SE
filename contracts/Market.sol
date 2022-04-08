@@ -16,7 +16,6 @@ contract Market is ReentrancyGuard {
 
     event End(address highestBidder, uint256 highestBid);
     event Bid(address indexed sender, uint256 amount);
-    event Withdraw(address indexed bidder, uint256 amount);
 
     constructor() {
         owner = payable(msg.sender);

@@ -185,7 +185,6 @@ export interface MarketInterface extends utils.Interface {
     "End(address,uint256)": EventFragment;
     "MarketItemCreatedOrAuctionEnded(uint256,address,uint256,address,address,uint256,bool,uint256,address,bool,bool,uint256)": EventFragment;
     "NewBidPlaced(address,uint256,address,address,bool,uint256,address,uint256)": EventFragment;
-    "Withdraw(address,uint256)": EventFragment;
     "WithdrawBid(address,uint256)": EventFragment;
   };
 
@@ -195,7 +194,6 @@ export interface MarketInterface extends utils.Interface {
     nameOrSignatureOrTopic: "MarketItemCreatedOrAuctionEnded"
   ): EventFragment;
   getEvent(nameOrSignatureOrTopic: "NewBidPlaced"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "Withdraw"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "WithdrawBid"): EventFragment;
 }
 
@@ -266,17 +264,6 @@ export type NewBidPlacedEvent = TypedEvent<
 >;
 
 export type NewBidPlacedEventFilter = TypedEventFilter<NewBidPlacedEvent>;
-
-export interface WithdrawEventObject {
-  bidder: string;
-  amount: BigNumber;
-}
-export type WithdrawEvent = TypedEvent<
-  [string, BigNumber],
-  WithdrawEventObject
->;
-
-export type WithdrawEventFilter = TypedEventFilter<WithdrawEvent>;
 
 export interface WithdrawBidEventObject {
   bidder: string;
@@ -516,12 +503,6 @@ export interface Market extends BaseContract {
       highestBidder?: string | null,
       endTime?: null
     ): NewBidPlacedEventFilter;
-
-    "Withdraw(address,uint256)"(
-      bidder?: string | null,
-      amount?: null
-    ): WithdrawEventFilter;
-    Withdraw(bidder?: string | null, amount?: null): WithdrawEventFilter;
 
     "WithdrawBid(address,uint256)"(
       bidder?: string | null,
