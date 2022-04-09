@@ -1,19 +1,82 @@
-import { expect } from "chai";
 import { ethers } from "hardhat";
+import { expect } from "chai"
+// import { Market } from '../typechain-types/contracts/Market';
+
+let NFTMarket, Market: any, marketAddress: any, NFT, nft: any, nftContractAddress: any;
+
+describe("NFTMarket", function (){
+  it("Should deploy and list 2 NFTs", async function() {
+      // Get marketplace contract address
+      NFTMarket = await ethers.getContractFactory("Market");
+      Market = await NFTMarket.deploy()
+      marketAddress = Market.address;
+      
+      // Get NFT contract address
+      NFT = await ethers.getContractFactory("NFT")
+      nft = await NFT.deploy(marketAddress);
+      nftContractAddress = nft.address;
+
+
+      // simulate simple deployment and listing
+      await Market.deployed();
+
+      await nft.deployed();
+
+      // set listing price
+      let listingPrice: string = await Market.getListingPrice();
+      listingPrice = listingPrice.toString();
+
+      const auctionPrice: any = ethers.utils.parseUnits("100", "ether");
+
+      
+      await nft.createToken("https://www.mytokenlocation.com");
+      await nft.createToken("https://www.mytokenlocation2.com");
+      
+      await Market.isApprovedForAll
+      
+      await nft.approve(marketAddress, 1)
+      await Market.createMarketItem(nftContractAddress, 1, auctionPrice, {
+        value: listingPrice
+      });
+
+      await nft.approve(marketAddress, 2)
+      await Market.createMarketItem(nftContractAddress, 2, auctionPrice, {
+        value: listingPrice
+      });
+
+      let listedItems: any = await Market.fetchMarketItems()
+      expect(await listedItems).to.have.lengthOf(2);
+    })
+
+    it("Should deploy, list and accept bid for NFT", async function() {
+      // place bid
+      const [_, bidder1, bidder2] = await ethers.getSigners();
+      console.log({"Owner:": _.address, "bidder1:": bidder1.address})
+
+      const bidPrice: any = ethers.utils.parseUnits("500", "ether");
+
+      await Market.connect(bidder1).placeBidOnAuction(nftContractAddress, 1, bidPrice);
+
+      await Market.connect(bidder1).placeBidOnAuction(nftContractAddress, 2, bidPrice);
+
+      let data: any = await Market.fetchMarketItems();
+    })
+
+    it("Should place bid with a different address", async function(){
+      const [_, bidder1, bidder2] = await ethers.getSigners();
+      console.log({"Owner:": _.address, "bidder2:": bidder2.address})
+
+      const bidPrice: any = ethers.utils.parseUnits("550", "ether");
+
+      await Market.connect(bidder2).placeBidOnAuction(nftContractAddress, 2, bidPrice);
+
+      let data: any = await Market.fetchMarketItems();
+      console.log(data);
+    })
+});
 
 describe("Greeter", function () {
-  it("Should return the new greeting once it's changed", async function () {
-    const Greeter = await ethers.getContractFactory("Greeter");
-    const greeter = await Greeter.deploy("Hello, world!");
-    await greeter.deployed();
-
-    expect(await greeter.greet()).to.equal("Hello, world!");
-
-    const setGreetingTx = await greeter.setGreeting("Hola, mundo!");
-
-    // wait until the transaction is mined
-    await setGreetingTx.wait();
-
-    expect(await greeter.greet()).to.equal("Hola, mundo!");
+  it("Should log to console", async function () {
+    console.log("I'am The Greeter!")
   });
 });
