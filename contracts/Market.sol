@@ -75,7 +75,8 @@ contract Market is ReentrancyGuard {
     function createMarketItem(
         address nftContract,
         uint256 tokenId,
-        uint256 price
+        uint256 price,
+        uint256 time
     ) public payable nonReentrant {
         require(price > 0, "Price must be atleast 1 wei");
         require(
@@ -96,7 +97,7 @@ contract Market is ReentrancyGuard {
         bool started = true;
 
         // set auction end time
-        uint256 endTime = block.timestamp + 2 days;
+        uint256 endTime = block.timestamp + time;
 
         idToMarketItem[itemId] = MarketItem(
             itemId,
