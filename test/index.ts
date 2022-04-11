@@ -17,10 +17,6 @@ async function convertInput(date: string) {
 }
 
 describe("NFTMarket", function (){
-  // this.beforeEach(async () => {
-  //   await new Promise(resolve => setTimeout(resolve, 16000));
-  //  console.log("----------------------");
-  // })
 
   it("Should deploy and list 2 NFTs", async function() {
       // Get marketplace contract address
@@ -68,7 +64,6 @@ describe("NFTMarket", function (){
     it("Should deploy, list and accept bid for NFT", async function() {
       // place bid
       const [_, bidder1] = await ethers.getSigners();
-      console.log({"Owner:": _.address, "bidder1:": bidder1.address})
 
       const bidPrice: any = ethers.utils.parseUnits("500", "ether");
 
@@ -78,39 +73,39 @@ describe("NFTMarket", function (){
 
     })
 
-    it("Should place bid on a listed NFT, with a different address", async function(){
+    it("Should place bid on a listed NFT, with a second address", async function(){
       const [_, , bidder2] = await ethers.getSigners();
-      console.log({"Owner:": _.address, "bidder2:": bidder2.address})
 
       const bidPrice: any = ethers.utils.parseUnits("550", "ether");
 
       await Market.connect(bidder2).placeBidOnAuction(nftContractAddress, 2, bidPrice);
 
       let data: any = await Market.fetchMarketItems();
-      console.log(data);
+      expect(await data[1].highestBidder).to.be.equal(bidder2.address);
     })
 
-    it("Transfer NFT to winner of auction", async function() {
-      const [_, bidder1, bidder2] = await ethers.getSigners();
+    it("Should transfer NFT to winner of auction", async function() {
+      const [_, , bidder2] = await ethers.getSigners();
       
       await new Promise(resolve => setTimeout(resolve, 16000));
       
       let tx = await Market.connect(bidder2).endMarketAuction(nftContractAddress, 2)
-      tx.wait();
+      await tx.wait();
     })
 
-    it("Should return NFT owned by user", async function() {
-      // await new Promise(resolve => setTimeout(resolve, 10000));
-        const [_, bidder1, bidder2] = await ethers.getSigners();
+    it("Second bidder should be owner of an NFT", async function() {
+        const [_, , bidder2] = await ethers.getSigners();
         let data: any = await Market.connect(bidder2).fetchMyNFTs();
 
-        console.log("------------NFTs------------", data);
+        expect(await data[0].owner).to.be.equal(bidder2.address);
     })
-});
 
-describe("Greeter", function () {
-  it("Should log to console", async function () {
+    it("Should allow non-winners of an auction to withdraw their bids", async function() {
+      const [_, bidder1, ] = await ethers.getSigners();
 
-    console.log("Welcoming You to This place! 🤣");
-  });
+      await Market.connect(bidder1).withdrawBids(2);
+      
+      const testBid: any = ethers.utils.parseUnits("80", "ether");
+      expect(await bidder1.getBalance()).to.be.above(testBid);
+    })
 });
