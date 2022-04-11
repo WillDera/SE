@@ -97,7 +97,7 @@ contract Market is ReentrancyGuard {
         bool started = true;
 
         // set auction end time
-        uint256 endTime = block.timestamp + time;
+        uint256 endTime = time;
 
         idToMarketItem[itemId] = MarketItem(
             itemId,

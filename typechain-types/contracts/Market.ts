@@ -75,7 +75,7 @@ export declare namespace Market {
 export interface MarketInterface extends utils.Interface {
   functions: {
     "bids(address)": FunctionFragment;
-    "createMarketItem(address,uint256,uint256)": FunctionFragment;
+    "createMarketItem(address,uint256,uint256,uint256)": FunctionFragment;
     "endMarketAuction(address,uint256)": FunctionFragment;
     "fetchItemsCreated()": FunctionFragment;
     "fetchMarketItems()": FunctionFragment;
@@ -105,7 +105,7 @@ export interface MarketInterface extends utils.Interface {
   encodeFunctionData(functionFragment: "bids", values: [string]): string;
   encodeFunctionData(
     functionFragment: "createMarketItem",
-    values: [string, BigNumberish, BigNumberish]
+    values: [string, BigNumberish, BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "endMarketAuction",
@@ -309,6 +309,7 @@ export interface Market extends BaseContract {
       nftContract: string,
       tokenId: BigNumberish,
       price: BigNumberish,
+      time: BigNumberish,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -355,6 +356,7 @@ export interface Market extends BaseContract {
     nftContract: string,
     tokenId: BigNumberish,
     price: BigNumberish,
+    time: BigNumberish,
     overrides?: PayableOverrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -401,6 +403,7 @@ export interface Market extends BaseContract {
       nftContract: string,
       tokenId: BigNumberish,
       price: BigNumberish,
+      time: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -518,6 +521,7 @@ export interface Market extends BaseContract {
       nftContract: string,
       tokenId: BigNumberish,
       price: BigNumberish,
+      time: BigNumberish,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -562,6 +566,7 @@ export interface Market extends BaseContract {
       nftContract: string,
       tokenId: BigNumberish,
       price: BigNumberish,
+      time: BigNumberish,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

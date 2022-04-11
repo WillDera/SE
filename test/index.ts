@@ -1,8 +1,20 @@
 import { ethers } from "hardhat";
 import { expect } from "chai"
+import moment from "moment";
 // import { Market } from '../typechain-types/contracts/Market';
 
 let NFTMarket, Market: any, marketAddress: any, NFT, nft: any, nftContractAddress: any;
+
+async function convertInput(date: string) {
+  let splitDate: any = date.split(" ")
+  let value: number = parseInt(splitDate[0])
+  let interval: any = splitDate[1]
+
+  let epoch = moment(new Date()).add(value, interval).toDate();
+  let Mepoch = moment(epoch).unix();
+
+  return Mepoch;
+}
 
 describe("NFTMarket", function (){
   it("Should deploy and list 2 NFTs", async function() {
@@ -27,6 +39,7 @@ describe("NFTMarket", function (){
       listingPrice = listingPrice.toString();
 
       const auctionPrice: any = ethers.utils.parseUnits("100", "ether");
+      const epoch = await convertInput('7 d');
 
       
       await nft.createToken("https://www.mytokenlocation.com");
@@ -35,17 +48,20 @@ describe("NFTMarket", function (){
       await Market.isApprovedForAll
       
       await nft.approve(marketAddress, 1)
-      await Market.createMarketItem(nftContractAddress, 1, auctionPrice, {
+      await Market.createMarketItem(nftContractAddress, 1, auctionPrice, epoch, {
         value: listingPrice
       });
 
       await nft.approve(marketAddress, 2)
-      await Market.createMarketItem(nftContractAddress, 2, auctionPrice, {
+      await Market.createMarketItem(nftContractAddress, 2, auctionPrice, epoch, {
         value: listingPrice
       });
 
       let listedItems: any = await Market.fetchMarketItems()
       expect(await listedItems).to.have.lengthOf(2);
+
+      let data: any = await Market.fetchMarketItems();
+      console.log(data);
     })
 
     it("Should deploy, list and accept bid for NFT", async function() {
@@ -77,6 +93,7 @@ describe("NFTMarket", function (){
 
 describe("Greeter", function () {
   it("Should log to console", async function () {
-    console.log("I'am The Greeter!")
+
+    console.log("Welcoming You to This place! 🤣");
   });
 });
