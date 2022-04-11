@@ -255,7 +255,7 @@ contract Market is ReentrancyGuard {
         (bool sent, bytes memory data) = payable(msg.sender).call{
             value: placedBid
         }("");
-        // require(sent, "Could not withdraw");
+        require(sent, "Could not withdraw");
 
         emit WithdrawBid(msg.sender, placedBid);
     }
