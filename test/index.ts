@@ -99,13 +99,13 @@ describe("NFTMarket", function (){
       tx.wait();
     })
 
-    // it("Should return NFT owned by user", async function() {
-    //   // await new Promise(resolve => setTimeout(resolve, 10000));
-    //     const [_, bidder1, bidder2] = await ethers.getSigners();
-    //     let data: any = await Market.connect(bidder2).fetchMyNFTs();
+    it("Should return NFT owned by user", async function() {
+      // await new Promise(resolve => setTimeout(resolve, 10000));
+        const [_, bidder1, bidder2] = await ethers.getSigners();
+        let data: any = await Market.connect(bidder2).fetchMyNFTs();
 
-    //     console.log("------------NFTs------------", data);
-    // })
+        console.log("------------NFTs------------", data);
+    })
 });
 
 describe("Greeter", function () {
