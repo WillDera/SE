@@ -39,13 +39,11 @@ describe("NFTMarket", function (){
       listingPrice = listingPrice.toString();
 
       const auctionPrice: any = ethers.utils.parseUnits("100", "ether");
-      const epoch = await convertInput('7 d');
+      const epoch = await convertInput('15 s');
 
       
       await nft.createToken("https://www.mytokenlocation.com");
       await nft.createToken("https://www.mytokenlocation2.com");
-      
-      await Market.isApprovedForAll
       
       await nft.approve(marketAddress, 1)
       await Market.createMarketItem(nftContractAddress, 1, auctionPrice, epoch, {
@@ -59,14 +57,11 @@ describe("NFTMarket", function (){
 
       let listedItems: any = await Market.fetchMarketItems()
       expect(await listedItems).to.have.lengthOf(2);
-
-      let data: any = await Market.fetchMarketItems();
-      console.log(data);
     })
 
     it("Should deploy, list and accept bid for NFT", async function() {
       // place bid
-      const [_, bidder1, bidder2] = await ethers.getSigners();
+      const [_, bidder1] = await ethers.getSigners();
       console.log({"Owner:": _.address, "bidder1:": bidder1.address})
 
       const bidPrice: any = ethers.utils.parseUnits("500", "ether");
@@ -75,11 +70,10 @@ describe("NFTMarket", function (){
 
       await Market.connect(bidder1).placeBidOnAuction(nftContractAddress, 2, bidPrice);
 
-      let data: any = await Market.fetchMarketItems();
     })
 
-    it("Should place bid with a different address", async function(){
-      const [_, bidder1, bidder2] = await ethers.getSigners();
+    it("Should place bid on a listed NFT, with a different address", async function(){
+      const [_, , bidder2] = await ethers.getSigners();
       console.log({"Owner:": _.address, "bidder2:": bidder2.address})
 
       const bidPrice: any = ethers.utils.parseUnits("550", "ether");
@@ -89,6 +83,21 @@ describe("NFTMarket", function (){
       let data: any = await Market.fetchMarketItems();
       console.log(data);
     })
+
+    // it("Transfer NFT to winner of auction", async function() {
+    //   await new Promise(resolve => setTimeout(resolve, 20000));
+    //     const [_, bidder1, bidder2] = await ethers.getSigners();
+
+    //     await Market.connect(bidder2).endMarketAuction(nftContractAddress, 2)
+    // })
+
+    // it("Should return NFT owned by user", async function() {
+    //   // await new Promise(resolve => setTimeout(resolve, 10000));
+    //     const [_, bidder1, bidder2] = await ethers.getSigners();
+    //     let data: any = await Market.connect(bidder2).fetchMyNFTs();
+
+    //     console.log("------------NFTs------------", data);
+    // })
 });
 
 describe("Greeter", function () {
