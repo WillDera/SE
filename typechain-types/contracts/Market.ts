@@ -181,27 +181,17 @@ export interface MarketInterface extends utils.Interface {
   ): Result;
 
   events: {
-    "Bid(address,uint256)": EventFragment;
     "End(address,uint256,address,address,uint256)": EventFragment;
     "MarketItemCreated(uint256,address,uint256,address,address,uint256,bool,uint256,address,bool,bool,uint256)": EventFragment;
     "NewBidPlaced(address,uint256,address,address,bool,uint256,address,uint256)": EventFragment;
     "WithdrawBid(address,uint256)": EventFragment;
   };
 
-  getEvent(nameOrSignatureOrTopic: "Bid"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "End"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "MarketItemCreated"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "NewBidPlaced"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "WithdrawBid"): EventFragment;
 }
-
-export interface BidEventObject {
-  sender: string;
-  amount: BigNumber;
-}
-export type BidEvent = TypedEvent<[string, BigNumber], BidEventObject>;
-
-export type BidEventFilter = TypedEventFilter<BidEvent>;
 
 export interface EndEventObject {
   nftContract: string;
@@ -449,12 +439,6 @@ export interface Market extends BaseContract {
   };
 
   filters: {
-    "Bid(address,uint256)"(
-      sender?: string | null,
-      amount?: null
-    ): BidEventFilter;
-    Bid(sender?: string | null, amount?: null): BidEventFilter;
-
     "End(address,uint256,address,address,uint256)"(
       nftContract?: null,
       tokenId?: null,

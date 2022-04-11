@@ -14,15 +14,6 @@ contract Market is ReentrancyGuard {
     address payable public owner;
     uint256 public listingPrice = 0.015 ether;
 
-    event End(
-        address nftContract,
-        uint256 tokenId,
-        address owner,
-        address highestBidder,
-        uint256 highestBid
-    );
-    event Bid(address indexed sender, uint256 amount);
-
     constructor() {
         owner = payable(msg.sender);
     }
@@ -68,6 +59,14 @@ contract Market is ReentrancyGuard {
         uint256 endTime
     );
 
+    event End(
+        address nftContract,
+        uint256 tokenId,
+        address owner,
+        address highestBidder,
+        uint256 highestBid
+    );
+
     event WithdrawBid(address indexed bidder, uint256 amount);
 
     mapping(uint256 => MarketItem) private idToMarketItem; // map id to a market item
@@ -77,7 +76,6 @@ contract Market is ReentrancyGuard {
         return listingPrice;
     }
 
-    //TODO: allow users to set end time
     function createMarketItem(
         address nftContract,
         uint256 tokenId,
@@ -225,18 +223,6 @@ contract Market is ReentrancyGuard {
         // set end state to true
         idToMarketItem[itemId].ended = true;
 
-        //* emit auction end event
-        // emit MarketItemAuctionEnded(
-        //     nftContract,
-        //     tokenId,
-        //     msg.sender,
-        //     address(0),
-        //     price,
-        //     false,
-        //     highestBid,
-        //     true,
-        //     endTime
-        // );
         emit End(
             nftContract,
             tokenId,
