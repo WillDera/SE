@@ -75,7 +75,7 @@ export declare namespace Market {
 export interface MarketInterface extends utils.Interface {
   functions: {
     "bids(address)": FunctionFragment;
-    "createMarketItem(address,uint256,uint256)": FunctionFragment;
+    "createMarketItem(address,uint256,uint256,uint256)": FunctionFragment;
     "endMarketAuction(address,uint256)": FunctionFragment;
     "fetchItemsCreated()": FunctionFragment;
     "fetchMarketItems()": FunctionFragment;
@@ -105,7 +105,7 @@ export interface MarketInterface extends utils.Interface {
   encodeFunctionData(functionFragment: "bids", values: [string]): string;
   encodeFunctionData(
     functionFragment: "createMarketItem",
-    values: [string, BigNumberish, BigNumberish]
+    values: [string, BigNumberish, BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "endMarketAuction",
@@ -181,39 +181,33 @@ export interface MarketInterface extends utils.Interface {
   ): Result;
 
   events: {
-    "Bid(address,uint256)": EventFragment;
-    "End(address,uint256)": EventFragment;
-    "MarketItemCreatedOrAuctionEnded(uint256,address,uint256,address,address,uint256,bool,uint256,address,bool,bool,uint256)": EventFragment;
+    "End(address,uint256,address,address,uint256)": EventFragment;
+    "MarketItemCreated(uint256,address,uint256,address,address,uint256,bool,uint256,address,bool,bool,uint256)": EventFragment;
     "NewBidPlaced(address,uint256,address,address,bool,uint256,address,uint256)": EventFragment;
     "WithdrawBid(address,uint256)": EventFragment;
   };
 
-  getEvent(nameOrSignatureOrTopic: "Bid"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "End"): EventFragment;
-  getEvent(
-    nameOrSignatureOrTopic: "MarketItemCreatedOrAuctionEnded"
-  ): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "MarketItemCreated"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "NewBidPlaced"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "WithdrawBid"): EventFragment;
 }
 
-export interface BidEventObject {
-  sender: string;
-  amount: BigNumber;
-}
-export type BidEvent = TypedEvent<[string, BigNumber], BidEventObject>;
-
-export type BidEventFilter = TypedEventFilter<BidEvent>;
-
 export interface EndEventObject {
+  nftContract: string;
+  tokenId: BigNumber;
+  owner: string;
   highestBidder: string;
   highestBid: BigNumber;
 }
-export type EndEvent = TypedEvent<[string, BigNumber], EndEventObject>;
+export type EndEvent = TypedEvent<
+  [string, BigNumber, string, string, BigNumber],
+  EndEventObject
+>;
 
 export type EndEventFilter = TypedEventFilter<EndEvent>;
 
-export interface MarketItemCreatedOrAuctionEndedEventObject {
+export interface MarketItemCreatedEventObject {
   itemId: BigNumber;
   nftContract: string;
   tokenId: BigNumber;
@@ -227,7 +221,7 @@ export interface MarketItemCreatedOrAuctionEndedEventObject {
   ended: boolean;
   endTime: BigNumber;
 }
-export type MarketItemCreatedOrAuctionEndedEvent = TypedEvent<
+export type MarketItemCreatedEvent = TypedEvent<
   [
     BigNumber,
     string,
@@ -242,11 +236,11 @@ export type MarketItemCreatedOrAuctionEndedEvent = TypedEvent<
     boolean,
     BigNumber
   ],
-  MarketItemCreatedOrAuctionEndedEventObject
+  MarketItemCreatedEventObject
 >;
 
-export type MarketItemCreatedOrAuctionEndedEventFilter =
-  TypedEventFilter<MarketItemCreatedOrAuctionEndedEvent>;
+export type MarketItemCreatedEventFilter =
+  TypedEventFilter<MarketItemCreatedEvent>;
 
 export interface NewBidPlacedEventObject {
   nftContract: string;
@@ -309,6 +303,7 @@ export interface Market extends BaseContract {
       nftContract: string,
       tokenId: BigNumberish,
       price: BigNumberish,
+      time: BigNumberish,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -355,6 +350,7 @@ export interface Market extends BaseContract {
     nftContract: string,
     tokenId: BigNumberish,
     price: BigNumberish,
+    time: BigNumberish,
     overrides?: PayableOverrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -401,6 +397,7 @@ export interface Market extends BaseContract {
       nftContract: string,
       tokenId: BigNumberish,
       price: BigNumberish,
+      time: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -442,19 +439,22 @@ export interface Market extends BaseContract {
   };
 
   filters: {
-    "Bid(address,uint256)"(
-      sender?: string | null,
-      amount?: null
-    ): BidEventFilter;
-    Bid(sender?: string | null, amount?: null): BidEventFilter;
-
-    "End(address,uint256)"(
+    "End(address,uint256,address,address,uint256)"(
+      nftContract?: null,
+      tokenId?: null,
+      owner?: null,
       highestBidder?: null,
       highestBid?: null
     ): EndEventFilter;
-    End(highestBidder?: null, highestBid?: null): EndEventFilter;
+    End(
+      nftContract?: null,
+      tokenId?: null,
+      owner?: null,
+      highestBidder?: null,
+      highestBid?: null
+    ): EndEventFilter;
 
-    "MarketItemCreatedOrAuctionEnded(uint256,address,uint256,address,address,uint256,bool,uint256,address,bool,bool,uint256)"(
+    "MarketItemCreated(uint256,address,uint256,address,address,uint256,bool,uint256,address,bool,bool,uint256)"(
       itemId?: BigNumberish | null,
       nftContract?: string | null,
       tokenId?: BigNumberish | null,
@@ -467,8 +467,8 @@ export interface Market extends BaseContract {
       started?: null,
       ended?: null,
       endTime?: null
-    ): MarketItemCreatedOrAuctionEndedEventFilter;
-    MarketItemCreatedOrAuctionEnded(
+    ): MarketItemCreatedEventFilter;
+    MarketItemCreated(
       itemId?: BigNumberish | null,
       nftContract?: string | null,
       tokenId?: BigNumberish | null,
@@ -481,7 +481,7 @@ export interface Market extends BaseContract {
       started?: null,
       ended?: null,
       endTime?: null
-    ): MarketItemCreatedOrAuctionEndedEventFilter;
+    ): MarketItemCreatedEventFilter;
 
     "NewBidPlaced(address,uint256,address,address,bool,uint256,address,uint256)"(
       nftContract?: string | null,
@@ -518,6 +518,7 @@ export interface Market extends BaseContract {
       nftContract: string,
       tokenId: BigNumberish,
       price: BigNumberish,
+      time: BigNumberish,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -562,6 +563,7 @@ export interface Market extends BaseContract {
       nftContract: string,
       tokenId: BigNumberish,
       price: BigNumberish,
+      time: BigNumberish,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

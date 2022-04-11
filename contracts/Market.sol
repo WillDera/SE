@@ -14,9 +14,6 @@ contract Market is ReentrancyGuard {
     address payable public owner;
     uint256 public listingPrice = 0.015 ether;
 
-    event End(address highestBidder, uint256 highestBid);
-    event Bid(address indexed sender, uint256 amount);
-
     constructor() {
         owner = payable(msg.sender);
     }
@@ -36,7 +33,7 @@ contract Market is ReentrancyGuard {
         uint256 endTime; // time auction ended
     }
 
-    event MarketItemCreatedOrAuctionEnded(
+    event MarketItemCreated(
         uint256 indexed itemId,
         address indexed nftContract,
         uint256 indexed tokenId,
@@ -62,6 +59,14 @@ contract Market is ReentrancyGuard {
         uint256 endTime
     );
 
+    event End(
+        address nftContract,
+        uint256 tokenId,
+        address owner,
+        address highestBidder,
+        uint256 highestBid
+    );
+
     event WithdrawBid(address indexed bidder, uint256 amount);
 
     mapping(uint256 => MarketItem) private idToMarketItem; // map id to a market item
@@ -71,11 +76,11 @@ contract Market is ReentrancyGuard {
         return listingPrice;
     }
 
-    //TODO: allow users to set end time
     function createMarketItem(
         address nftContract,
         uint256 tokenId,
-        uint256 price
+        uint256 price,
+        uint256 time
     ) public payable nonReentrant {
         require(price > 0, "Price must be atleast 1 wei");
         require(
@@ -96,7 +101,7 @@ contract Market is ReentrancyGuard {
         bool started = true;
 
         // set auction end time
-        uint256 endTime = block.timestamp + 2 days;
+        uint256 endTime = time;
 
         idToMarketItem[itemId] = MarketItem(
             itemId,
@@ -117,7 +122,7 @@ contract Market is ReentrancyGuard {
         IERC721(nftContract).transferFrom(msg.sender, address(this), tokenId);
 
         // emit token creation event
-        emit MarketItemCreatedOrAuctionEnded(
+        emit MarketItemCreated(
             itemId,
             nftContract,
             tokenId,
@@ -177,11 +182,9 @@ contract Market is ReentrancyGuard {
         nonReentrant
     {
         uint256 tokenId = idToMarketItem[itemId].tokenId;
-        uint256 price = idToMarketItem[itemId].price;
-        bool started = idToMarketItem[itemId].started;
-        uint256 endTime = idToMarketItem[itemId].endTime;
         address highestBidder = idToMarketItem[itemId].highestBidder;
-        uint256 highestBid = idToMarketItem[itemId].highestBid;
+        uint256 highestBid = bids[highestBidder];
+        address seller = idToMarketItem[itemId].seller;
 
         require(idToMarketItem[itemId].started, "Auction not started!");
         require(
@@ -191,8 +194,12 @@ contract Market is ReentrancyGuard {
         require(!idToMarketItem[itemId].ended, "Auction already ended!");
 
         if (idToMarketItem[itemId].highestBidder != address(0)) {
+            // set owner of nft to highest bidder
+            idToMarketItem[itemId].owner = payable(highestBidder);
+
             // transfer highest bid to seller at the end of the auction
-            idToMarketItem[itemId].seller.transfer(highestBid);
+            (bool sent, bytes memory data) = seller.call{value: highestBid}("");
+            require(sent, "Couldn't credit seller");
 
             // transfer ownership of nft to the highest bidder at the end of the auction
             IERC721(nftContract).transferFrom(
@@ -201,35 +208,27 @@ contract Market is ReentrancyGuard {
                 tokenId
             );
 
-            //* Start: Update marketItem struct
-            // set owner of nft to highest bidder
-            idToMarketItem[itemId].owner = payable(highestBidder);
-
-            // set sale state to true
-            idToMarketItem[itemId].sold = true;
-            //* End: "Update marketItem struct
-
             // increment number of sold nfts
             _itemsSold.increment();
 
-            // pay the contract/marketplace owner <!-- Commented out for now ---->
-            // payable(owner).transfer(listingPrice);
+            // pay the contract/marketplace owner
+            payable(owner).transfer(listingPrice);
+        } else {
+            IERC721(nftContract).transferFrom(address(this), seller, tokenId);
         }
 
-        //* emit auction end event
-        emit MarketItemCreatedOrAuctionEnded(
-            itemId,
+        // set sale state to true
+        idToMarketItem[itemId].sold = true;
+
+        // set end state to true
+        idToMarketItem[itemId].ended = true;
+
+        emit End(
             nftContract,
             tokenId,
-            msg.sender,
-            address(0),
-            price,
-            false,
-            highestBid,
+            idToMarketItem[itemId].owner,
             highestBidder,
-            started,
-            false,
-            endTime
+            highestBid
         );
     }
 
@@ -239,6 +238,9 @@ contract Market is ReentrancyGuard {
 
         // get bid placed by user's wallet
         uint256 placedBid = bids[msg.sender];
+
+        // set msg.sender bid to 0
+        bids[msg.sender] = 0;
 
         // make sure user isnt highest bidder
         require(placedBid < highestBid, "You are the highest bidder!");
@@ -253,7 +255,7 @@ contract Market is ReentrancyGuard {
         (bool sent, bytes memory data) = payable(msg.sender).call{
             value: placedBid
         }("");
-        require(sent, "Could not withdraw");
+        // require(sent, "Could not withdraw");
 
         emit WithdrawBid(msg.sender, placedBid);
     }
