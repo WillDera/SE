@@ -17,6 +17,11 @@ async function convertInput(date: string) {
 }
 
 describe("NFTMarket", function (){
+  // this.beforeEach(async () => {
+  //   await new Promise(resolve => setTimeout(resolve, 16000));
+  //  console.log("----------------------");
+  // })
+
   it("Should deploy and list 2 NFTs", async function() {
       // Get marketplace contract address
       NFTMarket = await ethers.getContractFactory("Market");
@@ -39,19 +44,20 @@ describe("NFTMarket", function (){
       listingPrice = listingPrice.toString();
 
       const auctionPrice: any = ethers.utils.parseUnits("100", "ether");
-      const epoch = await convertInput('15 s');
+      const epoch5 = await convertInput('12 s');
+      const epoch10 = await convertInput('14 s');
 
       
       await nft.createToken("https://www.mytokenlocation.com");
       await nft.createToken("https://www.mytokenlocation2.com");
       
       await nft.approve(marketAddress, 1)
-      await Market.createMarketItem(nftContractAddress, 1, auctionPrice, epoch, {
+      await Market.createMarketItem(nftContractAddress, 1, auctionPrice, epoch5, {
         value: listingPrice
       });
 
       await nft.approve(marketAddress, 2)
-      await Market.createMarketItem(nftContractAddress, 2, auctionPrice, epoch, {
+      await Market.createMarketItem(nftContractAddress, 2, auctionPrice, epoch10, {
         value: listingPrice
       });
 
@@ -84,12 +90,14 @@ describe("NFTMarket", function (){
       console.log(data);
     })
 
-    // it("Transfer NFT to winner of auction", async function() {
-    //   await new Promise(resolve => setTimeout(resolve, 20000));
-    //     const [_, bidder1, bidder2] = await ethers.getSigners();
-
-    //     await Market.connect(bidder2).endMarketAuction(nftContractAddress, 2)
-    // })
+    it("Transfer NFT to winner of auction", async function() {
+      const [_, bidder1, bidder2] = await ethers.getSigners();
+      
+      await new Promise(resolve => setTimeout(resolve, 16000));
+      
+      let tx = await Market.connect(bidder2).endMarketAuction(nftContractAddress, 2)
+      tx.wait();
+    })
 
     // it("Should return NFT owned by user", async function() {
     //   // await new Promise(resolve => setTimeout(resolve, 10000));

@@ -182,7 +182,8 @@ contract Market is ReentrancyGuard {
         bool started = idToMarketItem[itemId].started;
         uint256 endTime = idToMarketItem[itemId].endTime;
         address highestBidder = idToMarketItem[itemId].highestBidder;
-        uint256 highestBid = idToMarketItem[itemId].highestBid;
+        uint256 highestBid = bids[highestBidder];
+        address seller = idToMarketItem[itemId].seller;
 
         require(idToMarketItem[itemId].started, "Auction not started!");
         require(
@@ -192,8 +193,12 @@ contract Market is ReentrancyGuard {
         require(!idToMarketItem[itemId].ended, "Auction already ended!");
 
         if (idToMarketItem[itemId].highestBidder != address(0)) {
+            // set owner of nft to highest bidder
+            idToMarketItem[itemId].owner = payable(highestBidder);
+
             // transfer highest bid to seller at the end of the auction
-            idToMarketItem[itemId].seller.transfer(highestBid);
+            (bool sent, bytes memory data) = seller.call{value: highestBid}("");
+            require(sent, "Couldn't credit seller");
 
             // transfer ownership of nft to the highest bidder at the end of the auction
             IERC721(nftContract).transferFrom(
@@ -202,20 +207,17 @@ contract Market is ReentrancyGuard {
                 tokenId
             );
 
-            //* Start: Update marketItem struct
-            // set owner of nft to highest bidder
-            idToMarketItem[itemId].owner = payable(highestBidder);
-
-            // set sale state to true
-            idToMarketItem[itemId].sold = true;
-            //* End: "Update marketItem struct
-
             // increment number of sold nfts
             _itemsSold.increment();
 
-            // pay the contract/marketplace owner <!-- Commented out for now ---->
-            // payable(owner).transfer(listingPrice);
+            // pay the contract/marketplace owner
+            payable(owner).transfer(listingPrice);
+        } else {
+            IERC721(nftContract).transferFrom(address(this), seller, tokenId);
         }
+
+        // set sale state to true
+        idToMarketItem[itemId].sold = true;
 
         //* emit auction end event
         emit MarketItemCreatedOrAuctionEnded(
