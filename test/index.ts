@@ -105,7 +105,8 @@ describe("NFTMarket", function (){
     it("Should allow non-winners of an auction to withdraw their bids", async function() {
       const [_, bidder1, ] = await ethers.getSigners();
 
-      await Market.connect(bidder1).withdrawBids(2);
+      const tx = await Market.connect(bidder1).withdrawBids(2);
+      tx.wait();
       
       const testBid: any = ethers.utils.parseUnits("80", "ether");
       expect(await bidder1.getBalance()).to.be.above(testBid);
